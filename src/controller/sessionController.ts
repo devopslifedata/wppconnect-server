@@ -17,6 +17,7 @@ import { Message, Whatsapp } from '@wppconnect-team/wppconnect';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import mime from 'mime-types';
+import { anonymizeProxy } from 'proxy-chain';
 import QRCode from 'qrcode';
 import { Logger } from 'winston';
 
@@ -184,6 +185,25 @@ export async function showAllSessions(req: Request, res: Response) {
   return res.status(200).json({ response: await getAllTokens(req) });
 }
 
+async function proxyConfig(req: Request) {
+  const defaultProxyCountry = 'IT';
+  const defaultProxyCity = 'milan';
+  const exp = new RegExp('[a-zA-Z]{2}', 'g');
+
+  if (!req.body.countryCode) req.body.countryCode = defaultProxyCountry;
+  else if (!req.body.countryCode.match(exp))
+    req.body.countryCode = defaultProxyCountry;
+
+  if (!req.body.cityCode) req.body.cityCode = defaultProxyCity;
+
+  const { user, pass } = req.serverOptions.proxy;
+  const proxyUser = `${user}-cc-${req.body.countryCode}-city-${req.body.cityCode}`;
+  const proxyUrl = `http://${proxyUser}:${pass}@pr.oxylabs.io:7777`;
+
+  const newConfig = await anonymizeProxy(proxyUrl);
+  return `--proxy-server=${newConfig}`;
+}
+
 export async function startSession(req: Request, res: Response) {
   /**
    * #swagger.tags = ["Auth"]
@@ -216,6 +236,14 @@ export async function startSession(req: Request, res: Response) {
    */
   const session = req.session;
   const { waitQrCode = false } = req.body;
+  if (req.serverOptions.proxy.user && req.serverOptions.proxy.pass) {
+    const pConfig = await proxyConfig(req);
+    req.logger.info(`pConfig: ${pConfig}`);
+    req.serverOptions.createOptions.browserArgs = [
+      ...req.serverOptions.createOptions.browserArgs,
+      pConfig,
+    ];
+  }
 
   await getSessionState(req, res);
   await SessionUtil.opendata(req, session, waitQrCode ? res : null);
@@ -276,14 +304,17 @@ export async function logOutSession(req: Request, res: Response) {
    */
   try {
     const session = req.session;
+    req.logger.info(`Logout session: ${session}`);
     await req.client.logout();
     deleteSessionOnArray(req.session);
 
     setTimeout(async () => {
       const pathUserData = config.customUserDataDir + req.session;
-      const pathTokens = __dirname + `../../../tokens/${req.session}.data.json`;
+      req.logger.info(`pathUserData: ${pathUserData}`);
+      const pathTokens = __dirname + `/../../tokens/${req.session}.data.json`;
 
       if (fs.existsSync(pathUserData)) {
+        req.logger.info(`Deleting pathUserData: ${pathUserData}`);
         await fs.promises.rm(pathUserData, {
           recursive: true,
           maxRetries: 5,
@@ -310,9 +341,11 @@ export async function logOutSession(req: Request, res: Response) {
         .status(200)
         .json({ status: true, message: 'Session successfully closed' });
     }, 500);
-    /*try {
+    try {
       await req.client.close();
-    } catch (error) {}*/
+    } catch (error) {
+      req.logger.error(error);
+    }
   } catch (error) {
     req.logger.error(error);
     return await res
