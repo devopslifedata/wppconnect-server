@@ -16,19 +16,17 @@
 
 import { defaultLogger } from '@wppconnect-team/wppconnect';
 import cors from 'cors';
-import express, { Express, NextFunction, Router } from 'express';
+import express, { NextFunction, Request } from 'express';
 import boolParser from 'express-query-boolean';
 import { createServer } from 'http';
 import mergeDeep from 'merge-deep';
 import process from 'process';
 import { Server as Socket } from 'socket.io';
-import { Logger } from 'winston';
 
 import { version } from '../package.json';
 import config from './config';
 import { convert } from './mapper/index';
 import routes from './routes';
-import { ServerOptions } from './types/ServerOptions';
 import {
   createFolders,
   setMaxListners,
@@ -36,25 +34,17 @@ import {
 } from './util/functions';
 import { createLogger } from './util/logger';
 
-//require('dotenv').config();
-
 export const logger = createLogger(config.log);
 
-export function initServer(serverOptions: Partial<ServerOptions>): {
-  app: Express;
-  routes: Router;
-  logger: Logger;
-} {
+export function initServer(serverOptions: any) {
   if (typeof serverOptions !== 'object') {
     serverOptions = {};
   }
 
   serverOptions = mergeDeep({}, config, serverOptions);
-  defaultLogger.level = serverOptions?.log?.level
-    ? serverOptions.log.level
-    : 'silly';
+  defaultLogger.level = serverOptions.log.level;
 
-  setMaxListners(serverOptions as ServerOptions);
+  setMaxListners(serverOptions);
 
   const app = express();
   const PORT = process.env.PORT || serverOptions.port;
@@ -71,7 +61,7 @@ export function initServer(serverOptions: Partial<ServerOptions>): {
   }
 
   // Add request options
-  app.use((req: any, res: any, next: NextFunction) => {
+  app.use(async (req: Request, res: any, next: NextFunction) => {
     req.serverOptions = serverOptions;
     req.logger = logger;
     req.io = io as any;
@@ -95,6 +85,7 @@ export function initServer(serverOptions: Partial<ServerOptions>): {
       res.send = oldSend;
       return res.send(data);
     };
+
     next();
   });
 

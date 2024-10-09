@@ -352,25 +352,25 @@ export async function removeParticipant(req: Request, res: Response) {
       }
     }
    */
-  const { groupId, phone } = req.body;
+  // const { groupId, phone } = req.body;
 
   try {
-    let response: any = {};
+    // let response: any = {};
     const arrayGroups: any = [];
 
-    for (const group of groupToArray(groupId)) {
-      response = await req.client.removeParticipant(
-        group,
-        contactToArray(phone)
-      );
-      arrayGroups.push(response);
-    }
+    // for (const group of groupToArray(groupId)) {
+    //   response = await req.client.removeParticipant(
+    //     group,
+    //     contactToArray(phone)
+    //   );
+    //   arrayGroups.push(response);
+    // }
 
     return res.status(200).json({
       status: 'success',
       response: {
         message: 'Participant(s) removed successfully',
-        participants: phone,
+        // participants: phone,
         groups: arrayGroups,
       },
     });
