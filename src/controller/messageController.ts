@@ -407,7 +407,7 @@ export async function sendLinkPreview(req: Request, res: Response) {
       buttons: [
         {
           url: url,
-          text: 'Mostra prodotto',
+          text: 'Mostra Prodotto',
         },
       ],
     });

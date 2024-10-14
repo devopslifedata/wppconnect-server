@@ -783,7 +783,7 @@ export async function sendLinkCatalog(req: Request, res: Response) {
           buttons: [
             {
               url: catalogLink,
-              text: 'Abrir catálogo',
+              text: 'Catalogo Aperto',
             },
           ],
         }
