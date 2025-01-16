@@ -302,7 +302,7 @@ export async function addProduct(req: Request, res: Response) {
     retailerId,
     currency = 'eur',
   } = req.body;
-  if (!name || !image)
+  if (!name || !image || !price)
     res.status(401).send({
       message: 'name, price and image was not informed',
     });
