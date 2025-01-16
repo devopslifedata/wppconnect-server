@@ -99,7 +99,10 @@ export async function download(message: any, client: any, logger: any) {
   }
 }
 
-export async function startAllSessions(req: Request, res: Response) {
+export async function startAllSessions(
+  req: Request,
+  res: Response
+): Promise<any> {
   /**
    * #swagger.tags = ["Auth"]
      #swagger.autoBody=false
@@ -128,7 +131,7 @@ export async function startAllSessions(req: Request, res: Response) {
   const allSessions = await getAllTokens(req);
 
   if (tokenDecrypt !== req.serverOptions.secretKey) {
-    return res.status(400).json({
+    res.status(400).json({
       response: 'error',
       message: 'The token is incorrect',
     });
@@ -144,7 +147,10 @@ export async function startAllSessions(req: Request, res: Response) {
     .json({ status: 'success', message: 'Starting all sessions' });
 }
 
-export async function showAllSessions(req: Request, res: Response) {
+export async function showAllSessions(
+  req: Request,
+  res: Response
+): Promise<any> {
   /**
    * #swagger.tags = ["Auth"]
      #swagger.autoBody=false
@@ -172,7 +178,7 @@ export async function showAllSessions(req: Request, res: Response) {
   const arr: any = [];
 
   if (tokenDecrypt !== req.serverOptions.secretKey) {
-    return res.status(400).json({
+    res.status(400).json({
       response: false,
       message: 'The token is incorrect',
     });
@@ -182,7 +188,7 @@ export async function showAllSessions(req: Request, res: Response) {
     arr.push({ session: item });
   });
 
-  return res.status(200).json({ response: await getAllTokens(req) });
+  res.status(200).json({ response: await getAllTokens(req) });
 }
 
 async function proxyConfig(req: Request) {
@@ -249,7 +255,7 @@ export async function startSession(req: Request, res: Response) {
   await SessionUtil.opendata(req, session, waitQrCode ? res : null);
 }
 
-export async function closeSession(req: Request, res: Response) {
+export async function closeSession(req: Request, res: Response): Promise<any> {
   /**
    * #swagger.tags = ["Auth"]
      #swagger.operationId = 'closeSession'
@@ -289,7 +295,7 @@ export async function closeSession(req: Request, res: Response) {
   }
 }
 
-export async function logOutSession(req: Request, res: Response) {
+export async function logOutSession(req: Request, res: Response): Promise<any> {
   /**
    * #swagger.tags = ["Auth"]
      #swagger.operationId = 'logoutSession'
@@ -348,13 +354,16 @@ export async function logOutSession(req: Request, res: Response) {
     }
   } catch (error) {
     req.logger.error(error);
-    return await res
+    res
       .status(500)
       .json({ status: false, message: 'Error closing session', error });
   }
 }
 
-export async function checkConnectionSession(req: Request, res: Response) {
+export async function checkConnectionSession(
+  req: Request,
+  res: Response
+): Promise<any> {
   /**
    * #swagger.tags = ["Auth"]
      #swagger.operationId = 'CheckConnectionState'
@@ -369,9 +378,9 @@ export async function checkConnectionSession(req: Request, res: Response) {
   try {
     await req.client.isConnected();
 
-    return res.status(200).json({ status: true, message: 'Connected' });
+    res.status(200).json({ status: true, message: 'Connected' });
   } catch (error) {
-    return res.status(200).json({ status: false, message: 'Disconnected' });
+    res.status(200).json({ status: false, message: 'Disconnected' });
   }
 }
 
@@ -416,25 +425,25 @@ export async function downloadMediaByMessage(req: Request, res: Response) {
     }
 
     if (!message)
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Message not found',
       });
 
     if (!(message['mimetype'] || message.isMedia || message.isMMS))
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Message does not contain media',
       });
 
     const buffer = await client.decryptFile(message);
 
-    return res
+    res
       .status(200)
       .json({ base64: buffer.toString('base64'), mimetype: message.mimetype });
   } catch (e) {
     req.logger.error(e);
-    return res.status(400).json({
+    res.status(400).json({
       status: 'error',
       message: 'Decrypt file error',
       error: e,
@@ -464,25 +473,25 @@ export async function getMediaByMessage(req: Request, res: Response) {
     const message = await client.getMessageById(messageId);
 
     if (!message)
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Message not found',
       });
 
     if (!(message['mimetype'] || message.isMedia || message.isMMS))
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Message does not contain media',
       });
 
     const buffer = await client.decryptFile(message);
 
-    return res
+    res
       .status(200)
       .json({ base64: buffer.toString('base64'), mimetype: message.mimetype });
   } catch (ex) {
     req.logger.error(ex);
-    return res.status(500).json({
+    res.status(500).json({
       status: 'error',
       message: 'The session is not active',
       error: ex,
@@ -512,9 +521,9 @@ export async function getSessionState(req: Request, res: Response) {
         : null;
 
     if ((client == null || client.status == null) && !waitQrCode)
-      return res.status(200).json({ status: 'CLOSED', qrcode: null });
+      res.status(200).json({ status: 'CLOSED', qrcode: null });
     else if (client != null)
-      return res.status(200).json({
+      res.status(200).json({
         status: client.status,
         qrcode: qr,
         urlcode: client.urlcode,
@@ -522,7 +531,7 @@ export async function getSessionState(req: Request, res: Response) {
       });
   } catch (ex) {
     req.logger.error(ex);
-    return res.status(500).json({
+    res.status(500).json({
       status: 'error',
       message: 'The session is not active',
       error: ex,
@@ -565,20 +574,20 @@ export async function getQrCode(req: Request, res: Response) {
       });
       res.end(img);
     } else if (typeof req.client === 'undefined') {
-      return res.status(200).json({
+      res.status(200).json({
         status: null,
         message:
           'Session not started. Please, use the /start-session route, for initialization your session',
       });
     } else {
-      return res.status(200).json({
+      res.status(200).json({
         status: req.client.status,
         message: 'QRCode is not available...',
       });
     }
   } catch (ex) {
     req.logger.error(ex);
-    return res
+    res
       .status(500)
       .json({ status: 'error', message: 'Error retrieving QRCode', error: ex });
   }
@@ -598,12 +607,10 @@ export async function killServiceWorker(req: Request, res: Response) {
      }
    */
   try {
-    return res
-      .status(200)
-      .json({ status: 'error', response: 'Not implemented yet' });
+    res.status(200).json({ status: 'error', response: 'Not implemented yet' });
   } catch (ex) {
     req.logger.error(ex);
-    return res.status(500).json({
+    res.status(500).json({
       status: 'error',
       message: 'The session is not active',
       error: ex,
@@ -625,12 +632,10 @@ export async function restartService(req: Request, res: Response) {
      }
    */
   try {
-    return res
-      .status(200)
-      .json({ status: 'error', response: 'Not implemented yet' });
+    res.status(200).json({ status: 'error', response: 'Not implemented yet' });
   } catch (ex) {
     req.logger.error(ex);
-    return res.status(500).json({
+    res.status(500).json({
       status: 'error',
       response: { message: 'The session is not active', error: ex },
     });
@@ -687,12 +692,12 @@ export async function subscribePresence(req: Request, res: Response) {
         await req.client.subscribePresence(contato);
       }
 
-    return await res.status(200).json({
+    res.status(200).json({
       status: 'success',
       response: { message: 'Subscribe presence executed' },
     });
   } catch (error) {
-    return await res.status(500).json({
+    res.status(500).json({
       status: 'error',
       message: 'Error on subscribe presence',
       error: error,
@@ -760,9 +765,9 @@ export async function editBusinessProfile(req: Request, res: Response) {
      }
    */
   try {
-    return res.status(200).json(await req.client.editBusinessProfile(req.body));
+    res.status(200).json(await req.client.editBusinessProfile(req.body));
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       status: 'error',
       message: 'Error on edit business profile',
       error: error,
