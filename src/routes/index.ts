@@ -182,7 +182,7 @@ routes.post(
   '/api/:session/send-link-preview',
   verifyToken,
   statusConnection,
-  MessageController.sendLinkPreview
+  MessageController.sendLinkProduct
 );
 routes.post(
   '/api/:session/send-location',
@@ -659,7 +659,7 @@ routes.post(
   '/api/:session/send-link-catalog',
   verifyToken,
   statusConnection,
-  CatalogController.sendLinkCatalog
+  CatalogController.sendLinkCatalogInItalian
 );
 routes.post(
   '/api/:session/set-product-visibility',

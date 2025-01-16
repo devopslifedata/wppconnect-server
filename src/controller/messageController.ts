@@ -408,6 +408,60 @@ export async function sendLinkPreview(req: Request, res: Response) {
 
   try {
     const results: any = [];
+    for (const contato of phone) {
+      results.push(
+        await req.client.sendLinkPreview(`${contato}`, url, caption)
+      );
+    }
+
+    if (results.length === 0) res.status(400).json('Error sending message');
+    returnSucess(res, results);
+  } catch (error) {
+    returnError(req, res, error);
+  }
+}
+
+export async function sendLinkProduct(req: Request, res: Response) {
+  /**
+   * #swagger.tags = ["Messages"]
+     #swagger.autoBody=false
+     #swagger.security = [{
+            "bearerAuth": []
+     }]
+     #swagger.parameters["session"] = {
+      schema: 'NERDWHATS_AMERICA'
+     }
+     #swagger.requestBody = {
+        required: true,
+        "@content": {
+            "application/json": {
+                schema: {
+                    type: "object",
+                    properties: {
+                        "phone": { type: "string" },
+                        "isGroup": { type: "boolean" },
+                        "url": { type: "string" },
+                        "caption": { type: "string" }
+                    }
+                },
+                examples: {
+                    "Default": {
+                        value: {
+                            "phone": "5521999999999",
+                            "isGroup": false,
+                            "url": "http://www.link.com",
+                            "caption": "Text for describe link"
+                        }
+                    }
+                }
+            }
+        }
+    }
+   */
+  const { phone, url, caption } = req.body;
+
+  try {
+    const results: any = [];
     await req.client.sendText(phone, `${caption}`, {
       buttons: [
         {

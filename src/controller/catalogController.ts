@@ -799,3 +799,70 @@ export async function sendLinkCatalog(req: Request, res: Response) {
     });
   }
 }
+
+export async function sendLinkCatalogInItalian(req: Request, res: Response) {
+  /**
+   * #swagger.tags = ["Messages"]
+     #swagger.autoBody=false
+     #swagger.security = [{
+            "bearerAuth": []
+     }]
+     #swagger.parameters["session"] = {
+      schema: 'NERDWHATS_AMERICA'
+     }
+      #swagger.requestBody = {
+        required: true,
+        "@content": {
+            "application/json": {
+                schema: {
+                    type: "object",
+                    properties: {
+                      phones: { type: "array" },
+                      message: { type: "string" }
+                    }
+                },
+                examples: {
+                    "Default": {
+                        value: {
+                          phones: ['<array_phone_id'],
+                          message: 'Message',
+                        }
+                    },
+                }
+            }
+        }
+    }
+   */
+  const { phones, message } = req.body;
+  if (!phones)
+    return res.status(401).send({
+      message: 'phones was not informed',
+    });
+  const results = [];
+  try {
+    const session = await req.client.getWid();
+    const catalogLink = createCatalogLink(session);
+    for (const phone of phones) {
+      const result = await req.client.sendText(
+        phone,
+        `${message} ${catalogLink}`,
+        {
+          buttons: [
+            {
+              url: catalogLink,
+              text: 'Catalogo Aperto',
+            },
+          ],
+        }
+      );
+      (results as any).push({ phone, status: result.id });
+    }
+    return res.status(200).json({ status: 'success', response: results });
+  } catch (error) {
+    res.status(500).json({
+      status: 'Error',
+      message: 'Error on set enabled cart.',
+      error: error,
+    });
+  }
+}
