@@ -210,7 +210,7 @@ async function proxyConfig(req: Request) {
   return `--proxy-server=${newConfig}`;
 }
 
-export async function startSession(req: Request, res: Response) {
+export async function startSession(req: Request, res: Response): Promise<any> {
   /**
    * #swagger.tags = ["Auth"]
      #swagger.autoBody=false
